@@ -31,7 +31,7 @@ public class Bot {
     private static final Map<String, Command> commands = new HashMap<>();
 
     public Bot() {
-        
+
         setUpVoiceCommands();
 
         Scanner file = null;
@@ -63,7 +63,7 @@ public class Bot {
             });
 
         addResponseToMessage("keqing", "best!");
-
+        reminder();
         client.onDisconnect().block();
     }
 
@@ -105,14 +105,13 @@ public class Bot {
             }
         });
 
-        //wip
         final TrackScheduler scheduler = new TrackScheduler(player);
         commands.put("play", event -> {
             final String content = event.getMessage().getContent();
             final List<String> command = Arrays.asList(content.split(" "));
             playerManager.loadItem(command.get(1), scheduler);
         });
-        
+
         commands.put("leave", event -> {
             final Member member = event.getMember().orElse(null);
             if (member != null) {
@@ -129,27 +128,92 @@ public class Bot {
     }
 
 
-    public void logRemovedMessage(MessageDeleteEvent event) {
-        // Message msg = event.getMessage().orElse(null);
-        // if (msg == null) {
-        // // No Action taken
-        // return;
-        // }
-        // // Logs the deleted message in the channel
-        // createMessageInChannel(event.getChannel().block(), event.getMessage()
-        // .get().getUserData().toString() + " deleted the message: " + event
-        // .getMessage().toString());
-
-        // client.getEventDispatcher().on(MessageCreateEvent.class).map(
-        // MessageCreateEvent::getMessage);
-        // event.getChannel().flatMap(messageChannel -> messageChannel
-        // .createMessage(event.getMessage()));
-    }
-
-
+    /**
+     * Schedules a reminder in a given amount of time.
+     * 
+     */
     public void reminder() {
-        // Scheduler scheduler = new Scheduler();
-        // ResettableInterval timer = new ResettableInterval();
+        commands.put("reminder", event -> {
+            final Member member = event.getMember().orElse(null);
+
+            final String content = event.getMessage().getContent()
+                .toLowerCase();
+            String[] contents = content.split(" ");
+
+            double num = 0;
+            boolean valid = true;
+            try {
+                num = Integer.parseInt(contents[1]);
+
+            }
+            catch (Exception e) {
+                event.getMessage().getChannel().block().createMessage(
+                    "Invalid syntax! The proper syntax is\n!reminder 1 **second, minute, hour, day, or week** (message)")
+                    .block();
+                valid = false;
+            }
+
+            if (contents[2].charAt(contents[2].length() - 1) == 's') {
+                contents[2] = contents[2].substring(0, contents[2].length()
+                    - 1);
+            }
+
+            if (!(contents[2].equals("second") || contents[2].equals("minute")
+                || contents[2].equals("hour") || contents[2].equals("day")
+                || contents[2].equals("week"))) {
+                valid = false;
+            }
+
+            if (valid) {
+
+                event.getMessage().getChannel().block().createMessage(
+                    "Reminder set!").block();
+
+                long reminderTime = 0;
+
+                if (contents[2].equals("second")) {
+                    reminderTime = (long)(1000l * num);
+                }
+
+                else if (contents[2].equals("minute")) {
+                    reminderTime = (long)(60000l * num);
+                }
+
+                else if (contents[2].equals("hour")) {
+                    reminderTime = (long)(3600000l * num);
+                }
+
+                else if (contents[2].equals("day")) {
+                    reminderTime = (long)(86400000l * num);
+                }
+
+                else if (contents[2].equals("week")) {
+                    reminderTime = (long)(604800000l * num);
+                }
+
+                // Suspend the thread until the timer finishes
+                try {
+                    Thread.sleep(reminderTime);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println(reminderTime);
+
+                System.out.println("Times up");
+
+                String message = "";
+                for (int i = 3; i < contents.length; i++) {
+                    message += contents[i] + " ";
+                }
+
+                event.getMessage().getChannel().block().createMessage("Hey "
+                    + member.getNicknameMention() + " " + message).block();
+            }
+
+        });
+
     }
 
 }
