@@ -13,8 +13,14 @@ public final class LavaPlayerAudioProvider extends AudioProvider {
     private final MutableAudioFrame frame = new MutableAudioFrame();
 
     public LavaPlayerAudioProvider(final AudioPlayer player) {
+        // Allocate a ByteBuffer for Discord4J's AudioProvider to hold audio
+        // data
+        // for Discord
         super(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS
             .maximumChunkSize()));
+        // Set LavaPlayer's MutableAudioFrame to use the same buffer as the one
+        // that was 
+        // just allocated
         frame.setBuffer(getBuffer());
         this.player = player;
     }

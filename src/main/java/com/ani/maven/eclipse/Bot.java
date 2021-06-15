@@ -14,8 +14,11 @@ import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import discord4j.gateway.intent.IntentSet;
 import discord4j.voice.AudioProvider;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import discord4j.common.ResettableInterval;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -28,18 +31,29 @@ public class Bot {
     private static final Map<String, Command> commands = new HashMap<>();
 
     public Bot() {
+        
+        setUpVoiceCommands();
 
-        client = DiscordClientBuilder.create(
-            "ODUyNjQ5NTA0NjkxMTkxODc4.YMJ5uw.Iqyq6rXrRaHNEJnBBPkYazzFteI")
-            .build().login().block();
+        Scanner file = null;
+        try {
+            file = new Scanner(new File("BOT_KEY.txt"));
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        String key = file.nextLine();
+
+        client = DiscordClientBuilder.create(key).build().login().block();
+
         client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(
             event -> {
-                // Message.getContent() is a String
-                final String content = event.getMessage().getContent();
+
+                final String content = event.getMessage().getContent()
+                    .toLowerCase();
 
                 for (final Map.Entry<String, Command> entry : commands
                     .entrySet()) {
-                    // Using ! as our "prefix" to any command in the
+                    // Using ! as "prefix" to any command in the
                     // system.
                     if (content.startsWith('!' + entry.getKey())) {
                         entry.getValue().execute(event);
@@ -48,16 +62,30 @@ public class Bot {
                 }
             });
 
+        addResponseToMessage("keqing", "best!");
+
+        client.onDisconnect().block();
+    }
+
+
+    public void addResponseToMessage(String msg, String response) {
+        commands.put(msg, event -> event.getMessage().getChannel().block()
+            .createMessage(response).block());
+    }
+
+
+    public void setUpVoiceCommands() {
+        // Creates AudioPlayer instances and translates URLs to AudioTrack
+        // instances
         final AudioPlayerManager playerManager =
             new DefaultAudioPlayerManager();
 
         playerManager.getConfiguration().setFrameBufferFactory(
             NonAllocatingAudioFrameBuffer::new);
 
-        // Parse remote sources like YouTube links
+        // Allow playerManager to parse YouTube links
         AudioSourceManagers.registerRemoteSources(playerManager);
 
-        // Create an AudioPlayer
         final AudioPlayer player = playerManager.createPlayer();
 
         AudioProvider provider = new LavaPlayerAudioProvider(player);
@@ -70,33 +98,37 @@ public class Bot {
                     final VoiceChannel channel = voiceState.getChannel()
                         .block();
                     if (channel != null) {
-                        // join returns a VoiceConnection which would be
-                        // required if we were
-                        // adding disconnection features, but for now we are
-                        // just ignoring it.
                         channel.join(spec -> spec.setProvider(provider))
                             .block();
-                        final TrackScheduler scheduler = new TrackScheduler(
-                            player);
-                        commands.put("play", event2 -> {
-                            final String content = event.getMessage()
-                                .getContent();
-                            final List<String> command = Arrays.asList(content
-                                .split(" "));
-                            playerManager.loadItem(command.get(1), scheduler);
-                        });
                     }
-
                 }
             }
         });
 
-        commands.put("keqing", event -> event.getMessage().getChannel().block()
-            .createMessage("best!").block());
-
-        client.onDisconnect().block();
+        //wip
+        final TrackScheduler scheduler = new TrackScheduler(player);
+        commands.put("play", event -> {
+            final String content = event.getMessage().getContent();
+            final List<String> command = Arrays.asList(content.split(" "));
+            playerManager.loadItem(command.get(1), scheduler);
+        });
+        
+        commands.put("leave", event -> {
+            final Member member = event.getMember().orElse(null);
+            if (member != null) {
+                final VoiceState voiceState = member.getVoiceState().block();
+                if (voiceState != null) {
+                    final VoiceChannel channel = voiceState.getChannel()
+                        .block();
+                    if (channel != null) {
+                        channel.sendDisconnectVoiceState().block();
+                    }
+                }
+            }
+        });
     }
-    
+
+
     public void logRemovedMessage(MessageDeleteEvent event) {
         // Message msg = event.getMessage().orElse(null);
         // if (msg == null) {
