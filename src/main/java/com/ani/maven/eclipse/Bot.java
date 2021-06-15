@@ -33,7 +33,8 @@ public class Bot {
     public Bot() {
 
         setUpVoiceCommands();
-
+        reminder();
+        addResponseToMessage("keqing", "best!");
         Scanner file = null;
         try {
             file = new Scanner(new File("BOT_KEY.txt"));
@@ -56,14 +57,14 @@ public class Bot {
                     // Using ! as "prefix" to any command in the
                     // system.
                     if (content.startsWith('!' + entry.getKey())) {
+
                         entry.getValue().execute(event);
+
                         break;
                     }
                 }
             });
 
-        addResponseToMessage("keqing", "best!");
-        reminder();
         client.onDisconnect().block();
     }
 
@@ -134,34 +135,39 @@ public class Bot {
      */
     public void reminder() {
         commands.put("reminder", event -> {
+
             final Member member = event.getMember().orElse(null);
 
             final String content = event.getMessage().getContent()
                 .toLowerCase();
             String[] contents = content.split(" ");
 
+            String output = "";
             double num = 0;
             boolean valid = true;
-            try {
+            // Checks if the input passed in is parseable.
+            if (contents[1].matches("-?(0|[1-9]\\d*)")) {
                 num = Integer.parseInt(contents[1]);
-
             }
-            catch (Exception e) {
-                event.getMessage().getChannel().block().createMessage(
-                    "Invalid syntax! The proper syntax is\n!reminder 1 **second, minute, hour, day, or week** (message)")
-                    .block();
+
+            else {
+
+                output =
+                    "Invalid syntax! The proper syntax is\n**!reminder (positive integer) (second, minute, hour, day, or week) (message)**\nDon't include parantheses";
                 valid = false;
             }
 
-            if (contents[2].charAt(contents[2].length() - 1) == 's') {
-                contents[2] = contents[2].substring(0, contents[2].length()
-                    - 1);
-            }
+            if (valid) {
+                if (contents[2].charAt(contents[2].length() - 1) == 's') {
+                    contents[2] = contents[2].substring(0, contents[2].length()
+                        - 1);
+                }
 
-            if (!(contents[2].equals("second") || contents[2].equals("minute")
-                || contents[2].equals("hour") || contents[2].equals("day")
-                || contents[2].equals("week"))) {
-                valid = false;
+                if (!(contents[2].equals("second") || contents[2].equals(
+                    "minute") || contents[2].equals("hour") || contents[2]
+                        .equals("day") || contents[2].equals("week"))) {
+                    valid = false;
+                }
             }
 
             if (valid) {
@@ -208,9 +214,12 @@ public class Bot {
                     message += contents[i] + " ";
                 }
 
-                event.getMessage().getChannel().block().createMessage("Hey "
-                    + member.getNicknameMention() + " " + message).block();
+                output = "Hey " + member.getNicknameMention() + " " + message;
+
             }
+
+            event.getMessage().getChannel().block().createMessage(output)
+                .block();
 
         });
 
