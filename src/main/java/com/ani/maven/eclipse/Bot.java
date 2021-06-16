@@ -9,6 +9,7 @@ import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
@@ -19,6 +20,7 @@ import reactor.core.scheduler.Scheduler;
 import discord4j.common.ResettableInterval;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.Instant;
 import java.util.*;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -29,6 +31,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBu
 public class Bot {
     private final GatewayDiscordClient client;
     private static final Map<String, Command> commands = new HashMap<>();
+    private static final Instant LOGIN_TIME = Instant.now();
 
     public Bot() {
 
@@ -65,7 +68,37 @@ public class Bot {
                 }
             });
 
+        client.getEventDispatcher().on(MessageDeleteEvent.class).subscribe(
+            event -> {
+                // If statement that prevents bot from crashing when a message
+                // that is not in the cache is deleted
+                if (event.getMessage().isPresent()) {
+                    final String deletedMsg = event.getMessage().get()
+                        .getContent();
+                    System.out.println(deletedMsg);
+                    Member member = event.getMessage().get().getAuthorAsMember()
+                        .block();
+                    String output = member.getDisplayName() + " AKA " + member
+                        .getUsername() + " deleted a message in " + event
+                            .getMessage().get().getChannel().block()
+                            .getMention() + "\n**" + deletedMsg + "**";
+                    event.getMessage().get().getChannel().block().createMessage(
+                        output).block();
+                }
+
+            });
+
         client.onDisconnect().block();
+    }
+
+
+    public void ban() {
+        commands.put("ban", event -> event.getMessage());
+    }
+
+
+    public void deleted() {
+        commands.put("deleted", event -> event.getMessage());
     }
 
 

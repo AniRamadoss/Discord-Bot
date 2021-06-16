@@ -24,6 +24,8 @@ public final class LavaPlayerAudioProvider extends AudioProvider {
         frame.setBuffer(getBuffer());
         this.player = player;
     }
+    
+    
 
 
     @Override
