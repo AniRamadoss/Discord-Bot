@@ -25,6 +25,7 @@ public class Bot {
 
     public Bot() {
         addResponseToMessage("keqing", "best!");
+        // hopefully this works
         //setUpVoiceCommands();
         reminder();
 
