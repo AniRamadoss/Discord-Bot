@@ -29,7 +29,7 @@
       "memoryReservation": 500,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": "635538865482.dkr.ecr.us-east-1.amazonaws.com/scarlet-bot",
+      "image": "635538865482.dkr.ecr.us-east-1.amazonaws.com/scarlet-bot:latest",
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -55,7 +55,7 @@
   "compatibilities": [
     "EC2"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-east-1:635538865482:cluster/Scarlet-Discord-Bot",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:635538865482:cluster/Scarlet-Discord-Bot:3",
   "family": "scarlet-bot",
   "requiresAttributes": [
     {
