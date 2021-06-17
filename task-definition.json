@@ -46,7 +46,7 @@
       "dockerLabels": null,
       "systemControls": null,
       "privileged": null,
-      "name": "scarlet-bot"
+      "name": "scarlet-bot-container"
     }
   ],
   "placementConstraints": [],
