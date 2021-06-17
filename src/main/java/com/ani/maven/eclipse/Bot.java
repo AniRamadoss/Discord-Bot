@@ -34,10 +34,10 @@ public class Bot {
     private static final Instant LOGIN_TIME = Instant.now();
 
     public Bot() {
-
+        addResponseToMessage("keqing", "best!");
         setUpVoiceCommands();
         reminder();
-        addResponseToMessage("keqing", "best!");
+
         Scanner file = null;
         try {
             file = new Scanner(new File("BOT_KEY.txt"));
@@ -61,7 +61,14 @@ public class Bot {
                     // system.
                     if (content.startsWith('!' + entry.getKey())) {
 
-                        entry.getValue().execute(event);
+                        if (entry.getKey().contains("reminder")) {
+                            new Thread(() -> {
+                                entry.getValue().execute(event);
+                            }).start();
+                        }
+                        else {
+                            entry.getValue().execute(event);
+                        }
 
                         break;
                     }
@@ -75,13 +82,14 @@ public class Bot {
                 if (event.getMessage().isPresent()) {
                     final String deletedMsg = event.getMessage().get()
                         .getContent();
-                    System.out.println(deletedMsg);
+
                     Member member = event.getMessage().get().getAuthorAsMember()
                         .block();
                     String output = member.getDisplayName() + " AKA " + member
                         .getUsername() + " deleted a message in " + event
                             .getMessage().get().getChannel().block()
                             .getMention() + "\n**" + deletedMsg + "**";
+                    System.out.println("deleted message");
                     event.getMessage().get().getChannel().block().createMessage(
                         output).block();
                 }
@@ -122,7 +130,7 @@ public class Bot {
 
         final AudioPlayer player = playerManager.createPlayer();
 
-        AudioProvider provider = new LavaPlayerAudioProvider(player);
+        AudioProvider provider = new AudioPlayerProvider(player);
 
         commands.put("join", event -> {
             final Member member = event.getMember().orElse(null);
@@ -237,10 +245,6 @@ public class Bot {
                 catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
-                System.out.println(reminderTime);
-
-                System.out.println("Times up");
 
                 String message = "";
                 for (int i = 3; i < contents.length; i++) {
