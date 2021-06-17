@@ -1,23 +1,13 @@
 package com.ani.maven.eclipse;
 
-import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.event.domain.message.MessageDeleteEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.channel.MessageChannel;
-import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
-import discord4j.core.object.presence.Activity;
-import discord4j.core.object.presence.Presence;
-import discord4j.gateway.intent.IntentSet;
 import discord4j.voice.AudioProvider;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import discord4j.common.ResettableInterval;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.Instant;
@@ -89,7 +79,6 @@ public class Bot {
                         .getUsername() + " deleted a message in " + event
                             .getMessage().get().getChannel().block()
                             .getMention() + "\n**" + deletedMsg + "**";
-                    System.out.println("deleted message");
                     event.getMessage().get().getChannel().block().createMessage(
                         output).block();
                 }
@@ -99,15 +88,14 @@ public class Bot {
         client.onDisconnect().block();
     }
 
-
-    public void ban() {
-        commands.put("ban", event -> event.getMessage());
-    }
-
-
-    public void deleted() {
-        commands.put("deleted", event -> event.getMessage());
-    }
+// public void ban() {
+// commands.put("ban", event -> event.getMessage());
+// }
+//
+//
+// public void deleted() {
+// commands.put("deleted", event -> event.getMessage());
+// }
 
 
     public void addResponseToMessage(String msg, String response) {
