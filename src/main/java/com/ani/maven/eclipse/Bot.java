@@ -25,7 +25,7 @@ public class Bot {
 
     public Bot() {
         addResponseToMessage("keqing", "best!");
-        setUpVoiceCommands();
+        //setUpVoiceCommands();
         reminder();
 
         Scanner file = null;
@@ -104,58 +104,6 @@ public class Bot {
     }
 
 
-    public void setUpVoiceCommands() {
-        // Creates AudioPlayer instances and translates URLs to AudioTrack
-        // instances
-        final AudioPlayerManager playerManager =
-            new DefaultAudioPlayerManager();
-
-        playerManager.getConfiguration().setFrameBufferFactory(
-            NonAllocatingAudioFrameBuffer::new);
-
-        // Allow playerManager to parse YouTube links
-        AudioSourceManagers.registerRemoteSources(playerManager);
-
-        final AudioPlayer player = playerManager.createPlayer();
-
-        AudioProvider provider = new AudioPlayerProvider(player);
-
-        commands.put("join", event -> {
-            final Member member = event.getMember().orElse(null);
-            if (member != null) {
-                final VoiceState voiceState = member.getVoiceState().block();
-                if (voiceState != null) {
-                    final VoiceChannel channel = voiceState.getChannel()
-                        .block();
-                    if (channel != null) {
-                        channel.join(spec -> spec.setProvider(provider))
-                            .block();
-                    }
-                }
-            }
-        });
-
-        final TrackScheduler scheduler = new TrackScheduler(player);
-        commands.put("play", event -> {
-            final String content = event.getMessage().getContent();
-            final List<String> command = Arrays.asList(content.split(" "));
-            playerManager.loadItem(command.get(1), scheduler);
-        });
-
-        commands.put("leave", event -> {
-            final Member member = event.getMember().orElse(null);
-            if (member != null) {
-                final VoiceState voiceState = member.getVoiceState().block();
-                if (voiceState != null) {
-                    final VoiceChannel channel = voiceState.getChannel()
-                        .block();
-                    if (channel != null) {
-                        channel.sendDisconnectVoiceState().block();
-                    }
-                }
-            }
-        });
-    }
 
 
     /**
