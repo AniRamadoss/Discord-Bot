@@ -46,7 +46,7 @@
       "dockerLabels": null,
       "systemControls": null,
       "privileged": null,
-      "name": "discordbot-container"
+      "name": "scarlet-bot-container"
     }
   ],
   "placementConstraints": [],
