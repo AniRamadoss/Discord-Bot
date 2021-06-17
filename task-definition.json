@@ -55,7 +55,7 @@
   "compatibilities": [
     "EC2"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-east-1:635538865482:cluster/Scarlet-Discord-Bot:5",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:635538865482:cluster/Scarlet-Discord-Bot:6",
   "family": "scarlet-bot",
   "requiresAttributes": [
     {
