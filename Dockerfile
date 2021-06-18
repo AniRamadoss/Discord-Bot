@@ -1,9 +1,10 @@
-FROM bellsoft/liberica-openjdk-alpine:8
+FROM bellsoft/liberica-openjdk-alpine:11
+ARG TOKEN_ARG
+ENV TOKEN=$TOKEN_ARG
 
-WORKDIR /app
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
 
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
+EXPOSE 8080
 
-COPY src ./src
+ENTRYPOINT ["java", "-jar", "/app.jar"]
