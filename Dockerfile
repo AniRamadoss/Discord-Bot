@@ -1,10 +1,10 @@
-FROM bellsoft/liberica-openjdk-alpine:11
-ARG TOKEN_ARG
-ENV TOKEN=$TOKEN_ARG
+FROM openjdk:8-jdk-alpine as build
+WORKDIR /workspace/app
 
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
 
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+RUN ./mvnw install -DskipTests
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
