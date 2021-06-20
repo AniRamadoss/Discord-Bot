@@ -41,12 +41,19 @@ public class Bot {
     public static Map<String, String> matches = new HashMap<>();
 
     /**
+     * The command command prefix. By default it is "!" but it can be changed to
+     * anything, including words.
+     */
+    public static String commandSymbol = "!";
+
+    /**
      * Creates the bot and sets up the commands.
      */
     public Bot() {
         messageMatch();
         setUpVoiceCommands();
         reminder();
+        resetSymbol();
 
         Scanner file = null;
         try {
@@ -67,9 +74,8 @@ public class Bot {
 
                 for (final Map.Entry<String, Command> entry : commands
                     .entrySet()) {
-                    // Using ! as "prefix" to any command in the
-                    // system.
-                    if (content.startsWith('!' + entry.getKey())) {
+
+                    if (content.startsWith(commandSymbol + entry.getKey())) {
 
                         if (entry.getKey().contains("reminder")) {
                             new Thread(() -> {
@@ -112,6 +118,33 @@ public class Bot {
         client.onDisconnect().block();
     }
 
+
+    /**
+     * Changes the command prefix. By default it is '!'.
+     */
+    public void resetSymbol() {
+        commands.put("change", event -> {
+            String msg = event.getMessage().getContent();
+            String[] contents = msg.split(" ");
+
+            if (contents.length < 2) {
+                event.getMessage().getChannel().block().createMessage(
+                    "Invalid syntax. \n Use " + commandSymbol
+                        + "change *symbol identifier*)").block();
+            }
+
+            else {
+                commandSymbol = contents[1];
+                event.getMessage().getChannel().block().createMessage(
+                    "Prefix symbol set!  An example command would now be \n"
+                        + commandSymbol + "reminder 10 seconds do homework")
+                    .block();
+            }
+
+        });
+    }
+
+
     /**
      * Saves the message matches into the matches hashmap.
      */
@@ -121,8 +154,8 @@ public class Bot {
             String[] contents = msg.split(" ANDD ");
             if (contents.length < 2) {
                 event.getMessage().getChannel().block().createMessage(
-                    "Invalid syntax. \n Use !match *message* ANDD *response*")
-                    .block();
+                    "Invalid syntax. \n Use " + commandSymbol
+                        + "match *message* ANDD *response*").block();
             }
 
             else {
@@ -141,14 +174,14 @@ public class Bot {
      * does.
      * 
      * @param content
-     *      The message text to filter.
+     *            The message text to filter.
      * @param event
-     *      The message creation event
+     *            The message creation event
      */
     public void respondToMessage(String content, MessageCreateEvent event) {
         for (String key : matches.keySet()) {
             if (content.contains(key) && !content.contains("ANDD") && !content
-                .contains("!match") && !event.getMember().get()
+                .contains(commandSymbol + "match") && !event.getMember().get()
                     .getNicknameMention().equals("<@!852649504691191878>")) {
                 event.getMessage().getChannel().block().createMessage(matches
                     .get(key)).block();
@@ -182,8 +215,9 @@ public class Bot {
 
             else {
 
-                output =
-                    "Invalid syntax! The proper syntax is\n**!reminder (positive integer) (second, minute, hour, day, or week) (message)**\nDon't include parantheses";
+                output = "Invalid syntax! The proper syntax is\n**"
+                    + commandSymbol
+                    + "reminder (positive integer) (second, minute, hour, day, or week) (message)**\nDon't include parantheses";
                 valid = false;
             }
 
@@ -313,8 +347,10 @@ public class Bot {
 
 
 
+
 /**
  * Interface that is used to build lambda expressions in this class.
+ * 
  * @author Aniruthan Ramadoss
  *
  */
