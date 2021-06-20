@@ -25,7 +25,7 @@ public class Bot {
     private static Map<String, String> matches = new HashMap<>();
 
     public Bot() {
-
+        messageMatch();
         setUpVoiceCommands();
         reminder();
 
@@ -45,7 +45,6 @@ public class Bot {
 
                 final String content = event.getMessage().getContent()
                     .toLowerCase();
-                String[] contents = content.split(" ANDD ");
 
                 for (final Map.Entry<String, Command> entry : commands
                     .entrySet()) {
@@ -67,7 +66,7 @@ public class Bot {
 
                 }
 
-                respondToMessage(contents, event);
+                respondToMessage(content, event);
 
             });
 
@@ -96,39 +95,36 @@ public class Bot {
 
 
     public void messageMatch() {
-        commands.put("match", event -> addResponseToMessage(event));
-    }
+        commands.put("match", event -> {
+            String msg = event.getMessage().getContent();
+            String[] contents = msg.split(" ANDD ");
+            if (contents.length < 2) {
+                event.getMessage().getChannel().block().createMessage(
+                    "Invalid syntax. \n Use !match *message* ANDD *response*")
+                    .block();
+            }
 
-
-    public void addResponseToMessage(MessageCreateEvent event) {
-        String msg = event.getMessage().getContent();
-        String[] contents = msg.split(" ANDD ");
-        boolean found = false;
-        int pivot = 0;
-
-        if (contents.length < 1) {
-            event.getMessage().getChannel().block().createMessage(
-                "Invalid syntax. \n Use !match *message* ANDD *response*");
-        }
-
-        else {
-            matches.put(contents[0], contents[1]);
-            event.getMessage().getChannel().block().createMessage(
-                "Message Match Created!");
-        }
+            else {
+                matches.put(contents[0].substring(7), contents[1]);
+                event.getMessage().getChannel().block().createMessage(
+                    "Message Match Created!").block();
+            }
+        });
 
     }
 
 
-    public void respondToMessage(String[] contents, MessageCreateEvent event) {
-        if (contents.length > 0) {
-            String key = contents[0].substring(6);
-            if (matches.containsKey(key)) {
+    public void respondToMessage(String content, MessageCreateEvent event) {
+        for (String key : matches.keySet()) {
+            if (content.contains(key) && !content.contains("ANDD") && !content
+                .contains("!match") && !event.getMember().get()
+                    .getNicknameMention().equals("<@!852649504691191878>")) {
                 event.getMessage().getChannel().block().createMessage(matches
-                    .get(key));
+                    .get(key)).block();
+
             }
         }
-        
+
     }
 
 
