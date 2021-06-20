@@ -22,11 +22,11 @@ public class Bot {
     private final GatewayDiscordClient client;
     private static final Map<String, Command> commands = new HashMap<>();
     private static final Instant LOGIN_TIME = Instant.now();
+    private static Map<String, String> matches = new HashMap<>();
 
     public Bot() {
-        addResponseToMessage("keqing", "best!");
-        //hopefully this works!
-        //setUpVoiceCommands();
+
+        setUpVoiceCommands();
         reminder();
 
         Scanner file = null;
@@ -45,6 +45,7 @@ public class Bot {
 
                 final String content = event.getMessage().getContent()
                     .toLowerCase();
+                String[] contents = content.split(" ANDD ");
 
                 for (final Map.Entry<String, Command> entry : commands
                     .entrySet()) {
@@ -63,7 +64,11 @@ public class Bot {
 
                         break;
                     }
+
                 }
+
+                respondToMessage(contents, event);
+
             });
 
         client.getEventDispatcher().on(MessageDeleteEvent.class).subscribe(
@@ -89,22 +94,42 @@ public class Bot {
         client.onDisconnect().block();
     }
 
-// public void ban() {
-// commands.put("ban", event -> event.getMessage());
-// }
-//
-//
-// public void deleted() {
-// commands.put("deleted", event -> event.getMessage());
-// }
 
-
-    public void addResponseToMessage(String msg, String response) {
-        commands.put(msg, event -> event.getMessage().getChannel().block()
-            .createMessage(response).block());
+    public void messageMatch() {
+        commands.put("match", event -> addResponseToMessage(event));
     }
 
 
+    public void addResponseToMessage(MessageCreateEvent event) {
+        String msg = event.getMessage().getContent();
+        String[] contents = msg.split(" ANDD ");
+        boolean found = false;
+        int pivot = 0;
+
+        if (contents.length < 1) {
+            event.getMessage().getChannel().block().createMessage(
+                "Invalid syntax. \n Use !match *message* ANDD *response*");
+        }
+
+        else {
+            matches.put(contents[0], contents[1]);
+            event.getMessage().getChannel().block().createMessage(
+                "Message Match Created!");
+        }
+
+    }
+
+
+    public void respondToMessage(String[] contents, MessageCreateEvent event) {
+        if (contents.length > 0) {
+            String key = contents[0].substring(6);
+            if (matches.containsKey(key)) {
+                event.getMessage().getChannel().block().createMessage(matches
+                    .get(key));
+            }
+        }
+        
+    }
 
 
     /**
@@ -197,6 +222,63 @@ public class Bot {
 
         });
 
+    }
+
+
+    /**
+     * This method's code is partially taken from the Discord4J tutorial.
+     */
+    public void setUpVoiceCommands() {
+        // Creates AudioPlayer instances and translates URLs to AudioTrack
+        // instances
+        final AudioPlayerManager playerManager =
+            new DefaultAudioPlayerManager();
+
+        playerManager.getConfiguration().setFrameBufferFactory(
+            NonAllocatingAudioFrameBuffer::new);
+
+        // Allow playerManager to parse YouTube links
+        AudioSourceManagers.registerRemoteSources(playerManager);
+
+        final AudioPlayer player = playerManager.createPlayer();
+
+        AudioProvider provider = new AudioPlayerProvider(player);
+
+        commands.put("join", event -> {
+            final Member member = event.getMember().orElse(null);
+            if (member != null) {
+                final VoiceState voiceState = member.getVoiceState().block();
+                if (voiceState != null) {
+                    final VoiceChannel channel = voiceState.getChannel()
+                        .block();
+                    if (channel != null) {
+                        channel.join(spec -> spec.setProvider(provider))
+                            .block();
+                    }
+                }
+            }
+        });
+
+        final TrackScheduler scheduler = new TrackScheduler(player);
+        commands.put("play", event -> {
+            final String content = event.getMessage().getContent();
+            final List<String> command = Arrays.asList(content.split(" "));
+            playerManager.loadItem(command.get(1), scheduler);
+        });
+
+        commands.put("leave", event -> {
+            final Member member = event.getMember().orElse(null);
+            if (member != null) {
+                final VoiceState voiceState = member.getVoiceState().block();
+                if (voiceState != null) {
+                    final VoiceChannel channel = voiceState.getChannel()
+                        .block();
+                    if (channel != null) {
+                        channel.sendDisconnectVoiceState().block();
+                    }
+                }
+            }
+        });
     }
 
 }

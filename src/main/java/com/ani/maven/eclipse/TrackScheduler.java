@@ -6,7 +6,12 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-public final class TrackScheduler implements AudioLoadResultHandler {
+/**
+ * Not my code
+ * 
+ *
+ */
+public final class TrackScheduler implements AudioLoadResultHandler  {
 
     private final AudioPlayer player;
 
@@ -15,26 +20,29 @@ public final class TrackScheduler implements AudioLoadResultHandler {
     }
 
 
-    @Override
     public void trackLoaded(final AudioTrack track) {
         player.playTrack(track);
     }
 
 
     @Override
-    public void playlistLoaded(final AudioPlaylist playlist) {
-        // LavaPlayer found multiple AudioTracks from some playlist
+    public void playlistLoaded(AudioPlaylist playlist) {
+        // TODO Auto-generated method stub
+        
     }
 
 
     @Override
     public void noMatches() {
-        // LavaPlayer did not find any audio to extract
+        // TODO Auto-generated method stub
+        
     }
 
 
     @Override
-    public void loadFailed(final FriendlyException exception) {
-        // LavaPlayer could not parse an audio source for some reason
+    public void loadFailed(FriendlyException exception) {
+        // TODO Auto-generated method stub
+        
     }
+
 }
