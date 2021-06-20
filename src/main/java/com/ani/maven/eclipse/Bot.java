@@ -18,12 +18,31 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 
+/**
+ * Discord Bot
+ * 
+ * @author Aniruthan Ramadoss
+ *
+ */
 public class Bot {
     private final GatewayDiscordClient client;
-    private static final Map<String, Command> commands = new HashMap<>();
-    private static final Instant LOGIN_TIME = Instant.now();
-    private static Map<String, String> matches = new HashMap<>();
+    /**
+     * Hashmap that contains all the commands and the mapping to their
+     * functionalities.
+     */
+    public static final Map<String, Command> commands = new HashMap<>();
+    /**
+     * Logs the login time of the bot
+     */
+    public static final Instant LOGIN_TIME = Instant.now();
+    /**
+     * Contains all the message matches saved to the bot.
+     */
+    public static Map<String, String> matches = new HashMap<>();
 
+    /**
+     * Creates the bot and sets up the commands.
+     */
     public Bot() {
         messageMatch();
         setUpVoiceCommands();
@@ -93,7 +112,9 @@ public class Bot {
         client.onDisconnect().block();
     }
 
-
+    /**
+     * Saves the message matches into the matches hashmap.
+     */
     public void messageMatch() {
         commands.put("match", event -> {
             String msg = event.getMessage().getContent();
@@ -114,6 +135,16 @@ public class Bot {
     }
 
 
+    /**
+     * The bot filters the created message and searches for any trigger words
+     * that are contained in the matches hashmap. It responds accordingly if it
+     * does.
+     * 
+     * @param content
+     *      The message text to filter.
+     * @param event
+     *      The message creation event
+     */
     public void respondToMessage(String content, MessageCreateEvent event) {
         for (String key : matches.keySet()) {
             if (content.contains(key) && !content.contains("ANDD") && !content
@@ -223,6 +254,7 @@ public class Bot {
 
     /**
      * This method's code is partially taken from the Discord4J tutorial.
+     * Sets up commands to join, leave, and play music in voice channels.
      */
     public void setUpVoiceCommands() {
         // Creates AudioPlayer instances and translates URLs to AudioTrack
@@ -281,7 +313,11 @@ public class Bot {
 
 
 
-
+/**
+ * Interface that is used to build lambda expressions in this class.
+ * @author Aniruthan Ramadoss
+ *
+ */
 interface Command {
     void execute(MessageCreateEvent event);
 }
