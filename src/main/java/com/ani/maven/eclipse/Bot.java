@@ -39,12 +39,16 @@ public class Bot {
      * Contains all the message matches saved to the bot.
      */
     public static Map<String, String> matches = new HashMap<>();
+    /**
+     * Whether deleted messages are allowed to be logged or not.
+     */
+    public static boolean allowDeleted = true;
 
     /**
      * The command command prefix. By default it is "!" but it can be changed to
      * anything, including words.
      */
-    public static String commandSymbol = "!";
+    public static String prefix = "!";
 
     /**
      * Creates the bot and sets up the commands.
@@ -53,7 +57,9 @@ public class Bot {
         messageMatch();
         setUpVoiceCommands();
         reminder();
-        resetSymbol();
+        prefixChange();
+        help();
+        toggleDelete();
 
         Scanner file = null;
         try {
@@ -75,7 +81,7 @@ public class Bot {
                 for (final Map.Entry<String, Command> entry : commands
                     .entrySet()) {
 
-                    if (content.startsWith(commandSymbol + entry.getKey())) {
+                    if (content.startsWith(prefix + entry.getKey())) {
 
                         if (entry.getKey().contains("reminder")) {
                             new Thread(() -> {
@@ -99,7 +105,7 @@ public class Bot {
             event -> {
                 // If statement that prevents bot from crashing when a message
                 // that is not in the cache is deleted
-                if (event.getMessage().isPresent()) {
+                if (event.getMessage().isPresent() && allowDeleted) {
                     final String deletedMsg = event.getMessage().get()
                         .getContent();
 
@@ -120,24 +126,56 @@ public class Bot {
 
 
     /**
-     * Changes the command prefix. By default it is '!'.
+     * Toggles whether or not the bot will log deleted messages.
      */
-    public void resetSymbol() {
-        commands.put("change", event -> {
+    public void toggleDelete() {
+        commands.put("delete", event -> {
+            allowDeleted = !allowDeleted;
+            String message = "Deleted Message Logger is now turned **on**.";
+            if (!allowDeleted) {
+                message = "Deleted Message Logger is now turned **off**.";
+            }
+            event.getMessage().getChannel().block().createMessage(message)
+                .block();
+        });
+    }
+
+
+    /**
+     * Provides information to the user about bot functionalities.
+     */
+    public void help() {
+        commands.put("help", event -> {
+            String helpMessage =
+                "Deleted Messages Logger: sends deleted messages in the channel they were deleted in as soon as they are deleted. This feature can be toggled on and off through the *" + prefix + "delete* command."
+                    + "\nMessageMatcher: Configure the bot to respond to a message with another message.  For example *" + prefix + "match ping ANDD pong* makes the bot respond with 'pong' whenever a message containing the word 'ping' is sent."
+                    + "\nReminder Service: The user can schedule a reminder through the use of the !reminder command. Type *" + prefix + "reminder* for more information about the syntax."
+                    + "\nPrefix Change: Change the command prefix to other symbols through the *" + prefix + "prefix* command. By default, it is ! but it can be changed to any character or word.";
+            event.getMessage().getChannel().block().createMessage(helpMessage)
+                .block();
+        });
+    }
+
+
+    /**
+     * Changes the command prefix. By default it is '!'
+     */
+    public void prefixChange() {
+        commands.put("prefix", event -> {
             String msg = event.getMessage().getContent();
             String[] contents = msg.split(" ");
 
             if (contents.length < 2) {
                 event.getMessage().getChannel().block().createMessage(
-                    "Invalid syntax. \n Use " + commandSymbol
+                    "Invalid syntax. \n Use " + prefix
                         + "change *symbol identifier*)").block();
             }
 
             else {
-                commandSymbol = contents[1];
+                prefix = contents[1];
                 event.getMessage().getChannel().block().createMessage(
-                    "Prefix symbol set!  An example command would now be \n"
-                        + commandSymbol + "reminder 10 seconds do homework")
+                    "Prefix set!  An example command would now be \n"
+                        + prefix + "reminder 10 seconds do homework")
                     .block();
             }
 
@@ -154,7 +192,7 @@ public class Bot {
             String[] contents = msg.split(" ANDD ");
             if (contents.length < 2) {
                 event.getMessage().getChannel().block().createMessage(
-                    "Invalid syntax. \n Use " + commandSymbol
+                    "Invalid syntax. \n Use " + prefix
                         + "match *message* ANDD *response*").block();
             }
 
@@ -181,7 +219,7 @@ public class Bot {
     public void respondToMessage(String content, MessageCreateEvent event) {
         for (String key : matches.keySet()) {
             if (content.contains(key) && !content.contains("ANDD") && !content
-                .contains(commandSymbol + "match") && !event.getMember().get()
+                .contains(prefix + "match") && !event.getMember().get()
                     .getNicknameMention().equals("<@!852649504691191878>")) {
                 event.getMessage().getChannel().block().createMessage(matches
                     .get(key)).block();
@@ -208,15 +246,14 @@ public class Bot {
             String output = "";
             double num = 0;
             boolean valid = true;
-            // Checks if the input passed in is parseable.
-            if (contents[1].matches("-?(0|[1-9]\\d*)")) {
+            // Checks if the input passed in is parsable.
+            if (contents.length > 2 && contents[1].matches("-?(0|[1-9]\\d*)")) {
                 num = Integer.parseInt(contents[1]);
             }
 
             else {
-
                 output = "Invalid syntax! The proper syntax is\n**"
-                    + commandSymbol
+                    + prefix
                     + "reminder (positive integer) (second, minute, hour, day, or week) (message)**\nDon't include parantheses";
                 valid = false;
             }
