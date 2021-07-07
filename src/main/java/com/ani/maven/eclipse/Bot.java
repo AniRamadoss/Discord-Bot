@@ -55,6 +55,7 @@ public class Bot {
      */
     public Bot() {
         messageMatch();
+        messageUnmatch();
         setUpVoiceCommands();
         reminder();
         prefixChange();
@@ -147,10 +148,17 @@ public class Bot {
     public void help() {
         commands.put("help", event -> {
             String helpMessage =
-                "Deleted Messages Logger: sends deleted messages in the channel they were deleted in as soon as they are deleted. This feature can be toggled on and off through the *" + prefix + "delete* command."
-                    + "\nMessageMatcher: Configure the bot to respond to a message with another message.  For example *" + prefix + "match ping ANDD pong* makes the bot respond with 'pong' whenever a message containing the word 'ping' is sent."
-                    + "\nReminder Service: The user can schedule a reminder through the use of the !reminder command. Type *" + prefix + "reminder* for more information about the syntax."
-                    + "\nPrefix Change: Change the command prefix to other symbols through the *" + prefix + "prefix* command. By default, it is ! but it can be changed to any character or word.";
+                "Deleted Messages Logger: sends deleted messages in the channel they were deleted in as soon as they are deleted. This feature can be toggled on and off through the *"
+                    + prefix + "delete* command."
+                    + "\nMessageMatcher: Configure the bot to respond to a message with another message.  For example *"
+                    + prefix
+                    + "match ping ANDD pong* makes the bot respond with 'pong' whenever a message containing the word 'ping' is sent."
+                    + "\nReminder Service: The user can schedule a reminder through the use of the !reminder command. Type *"
+                    + prefix
+                    + "reminder* for more information about the syntax."
+                    + "\nPrefix Change: Change the command prefix to other symbols through the *"
+                    + prefix
+                    + "prefix* command. By default, it is ! but it can be changed to any character or word.";
             event.getMessage().getChannel().block().createMessage(helpMessage)
                 .block();
         });
@@ -174,9 +182,8 @@ public class Bot {
             else {
                 prefix = contents[1];
                 event.getMessage().getChannel().block().createMessage(
-                    "Prefix set!  An example command would now be \n"
-                        + prefix + "reminder 10 seconds do homework")
-                    .block();
+                    "Prefix set!  An example command would now be \n" + prefix
+                        + "reminder 10 seconds do homework").block();
             }
 
         });
@@ -203,6 +210,32 @@ public class Bot {
             }
         });
 
+    }
+
+
+    /**
+     * Unmatches a saved message match.
+     */
+    public void messageUnmatch() {
+        commands.put("unmatch", event -> {
+            String msg = event.getMessage().getContent();
+            String phrase = msg.substring(9);
+            boolean removed = false;
+            for (String thePhrase : matches.keySet()) {
+                if (phrase.equals(thePhrase)) {
+                    removed = true;
+                    matches.remove(phrase);
+                    event.getMessage().getChannel().block().createMessage(
+                        "The match " + "\"" + phrase + "\"" + " was removed!")
+                        .block();
+                }
+            }
+            if (!removed) {
+                event.getMessage().getChannel().block().createMessage(
+                    "The specified match was not found.");
+            }
+
+        });
     }
 
 
@@ -252,8 +285,7 @@ public class Bot {
             }
 
             else {
-                output = "Invalid syntax! The proper syntax is\n**"
-                    + prefix
+                output = "Invalid syntax! The proper syntax is\n**" + prefix
                     + "reminder (positive integer) (second, minute, hour, day, or week) (message)**\nDon't include parantheses";
                 valid = false;
             }
